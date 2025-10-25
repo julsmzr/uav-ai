@@ -4,24 +4,16 @@ This project was created during the Advanced Topics in Artificial Intelligence c
 
 ## Development
 
-### setting up the dev env
+### Setup
 
 ```bash
+git submodule update --init
+
 python3 -m venv venv
 source venv/bin/activate
+
 python3 -m pip install -r requirements.txt
+python3 -m pip install -e models/ultralytics/ultralytics
 ```
 
-### activating up the dev env
-
-```bash
-source venv/bin/activate
-```
-
-## Setup
-
-```bash
-# Setup of submodules
-git submodule update --init
-# TODO
-```
+Then walk through the setup.ipynb in order to set up the Anti-UAV300 dataset.
