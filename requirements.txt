@@ -1,2 +1,4 @@
 gdown # allows downloading the dataset from google drive
-
+scikit-learn
+pandas
+numpy

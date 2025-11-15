@@ -37,12 +37,13 @@ def download_and_extract(url: str,
     remove_zip: bool
 ) -> bool:
     try:
+        os.makedirs("datasets", exist_ok=True)
+        
         download(url, zip_path, verbose)
         extract(zip_path, extract_dir, verbose, remove_zip)
 
         vprint(verbose, f"Dataset was downloaded and extracted to {extract_dir}.")
     except KeyboardInterrupt:
         print("Download Aborted.")
-    finally:
-        print("Something went wrong. Please rerun the download.")
         return False
+    return True

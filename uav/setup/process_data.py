@@ -157,9 +157,8 @@ def format_dataset(source_dir: str, target_dir: str, verbose: bool, remove_sourc
 
     for subset_dirname in ["test", "train", "val"]:
         subset_dir = os.path.join(source_dir, subset_dirname)
-
         for sequence_dirname in tqdm(os.listdir(subset_dir), desc=f"Extracting {subset_dirname} subset"):
-            if sequence_dirname == ".DS_Store" or (sequence_dirname in validated if validated is not None else True):
+            if sequence_dirname == ".DS_Store" or (sequence_dirname in validated if validated is not None else False):
                 continue
 
             # Extract frames
@@ -199,9 +198,8 @@ def process_dataset(source_dir: str, target_dir: str, verbose: bool, remove_sour
     
     try:
         format_dataset(source_dir, target_dir, verbose, remove_source)
-        return True
     except KeyboardInterrupt:
         print("Data processing aborted.")
-    finally:
-        print("Something went wrong. Please rerun the processing.")
         return False
+    
+    return True

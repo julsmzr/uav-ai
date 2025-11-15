@@ -1,138 +1,85 @@
-import os
-import json
-from collections import defaultdict
+def analyze_data():
+    print("to be implemented.")
 
-def analyze_data(statstic_json_filepath: str) -> None:
-    with open(statstic_json_filepath, "r") as f:
-        data = json.load(f)
 
-    total_frames_vz, total_frames_ir = 0, 0
-    total_amount_annotations_vz, total_amount_annotations_ir = 0, 0
-    
-    # Additional metrics
-    sequence_stats = []
-    annotation_density_vz = []
-    annotation_density_ir = []
-    frames_per_sequence = []
-    annotations_per_sequence = []
-    
-    for sequence_name, (amount_frames_vz, amount_frames_ir, amount_annotations_vz, amount_annotations_ir) in data.items():
-        total_frames_vz += amount_frames_vz
-        total_frames_ir += amount_frames_ir
-        total_amount_annotations_vz += amount_annotations_vz
-        total_amount_annotations_ir += amount_annotations_ir
-        
-        # Calculate densities
-        density_vz = amount_annotations_vz / amount_frames_vz if amount_frames_vz > 0 else 0
-        density_ir = amount_annotations_ir / amount_frames_ir if amount_frames_ir > 0 else 0
-        
-        annotation_density_vz.append(density_vz)
-        annotation_density_ir.append(density_ir)
-        frames_per_sequence.append(amount_frames_vz + amount_frames_ir)
-        annotations_per_sequence.append(amount_annotations_vz + amount_annotations_ir)
-        
-        sequence_stats.append({
-            'name': sequence_name,
-            'frames_vz': amount_frames_vz,
-            'frames_ir': amount_frames_ir,
-            'annotations_vz': amount_annotations_vz,
-            'annotations_ir': amount_annotations_ir,
-            'density_vz': density_vz,
-            'density_ir': density_ir
-        })
 
-    # Basic totals
-    print("=== BASIC STATISTICS ===")
-    print("Total Frames VZ:", total_frames_vz)
-    print("Total Frames IR:", total_frames_ir)
-    print("Total Frames (All):", total_frames_vz + total_frames_ir)
-    print()
-    print("Total Amount Annotations VZ:", total_amount_annotations_vz)
-    print("Total Amount Annotations IR:", total_amount_annotations_ir)
-    print("Total Annotations (All):", total_amount_annotations_vz + total_amount_annotations_ir)
-    print()
+# amount of images, amount of annotations, per modality! (vz, ir)
+# some ratios, balance ratio?
 
-    # Annotation density analysis
-    print("=== ANNOTATION DENSITY ===")
-    print(f"Average annotations per frame VZ: {total_amount_annotations_vz/total_frames_vz:.3f}" if total_frames_vz > 0 else "No VZ frames")
-    print(f"Average annotations per frame IR: {total_amount_annotations_ir/total_frames_ir:.3f}" if total_frames_ir > 0 else "No IR frames")
-    print(f"Overall annotation density: {(total_amount_annotations_vz + total_amount_annotations_ir)/(total_frames_vz + total_frames_ir):.3f}")
-    print()
+# { datasets/anti-uav300/statistics.json each is sequence: [numvisible images, num infrared images, num visible annotations, num infrared annotations]
+    # "20190925_200805_1_2": [
+    #     934,
+    #     934,
+    #     934,
+    #     934
+    # ],
+    # "20190925_200805_1_5": [
+    #     1000,
+    #     1000,
+    #     1000,
+    #     944
+    # ],
+    # "20190925_111757_1_4": [
+    #     1000,
+    #     1000,
+    #     1000,
+    #     1000
+    # ],
+    # "20190925_111757_1_3": [
+    #     1000,
+    #     1000,
+    #     1000,
+    #     1000
+    # ],
 
-    # Sequence statistics
-    print("=== SEQUENCE ANALYSIS ===")
-    print(f"Total sequences: {len(data)}")
-    print(f"Average frames per sequence: {sum(frames_per_sequence)/len(frames_per_sequence):.1f}")
-    print(f"Average annotations per sequence: {sum(annotations_per_sequence)/len(annotations_per_sequence):.1f}")
-    print(f"Min frames in sequence: {min(frames_per_sequence)}")
-    print(f"Max frames in sequence: {max(frames_per_sequence)}")
-    print(f"Min annotations in sequence: {min(annotations_per_sequence)}")
-    print(f"Max annotations in sequence: {max(annotations_per_sequence)}")
-    print()
 
-    # Find sequences with extreme characteristics
-    most_dense_vz = max(sequence_stats, key=lambda x: x['density_vz'])
-    most_dense_ir = max(sequence_stats, key=lambda x: x['density_ir'])
-    least_dense_vz = min(sequence_stats, key=lambda x: x['density_vz'])
-    least_dense_ir = min(sequence_stats, key=lambda x: x['density_ir'])
-    
-    print("=== EXTREME CASES ===")
-    print(f"Most dense VZ sequence: {most_dense_vz['name']} (density: {most_dense_vz['density_vz']:.3f})")
-    print(f"Most dense IR sequence: {most_dense_ir['name']} (density: {most_dense_ir['density_ir']:.3f})")
-    print(f"Least dense VZ sequence: {least_dense_vz['name']} (density: {least_dense_vz['density_vz']:.3f})")
-    print(f"Least dense IR sequence: {least_dense_ir['name']} (density: {least_dense_ir['density_ir']:.3f})")
-    print()
+# save somewhere. allow plotting! use visualization in script instead of in seperate dir. code below!
 
-    # Distribution analysis
-    print("=== DISTRIBUTION ANALYSIS ===")
-    density_ranges_vz = {'very_low': 0, 'low': 0, 'medium': 0, 'high': 0, 'very_high': 0}
-    density_ranges_ir = {'very_low': 0, 'low': 0, 'medium': 0, 'high': 0, 'very_high': 0}
-    
-    for seq in sequence_stats:
-        # VZ density categorization
-        if seq['density_vz'] == 0:
-            density_ranges_vz['very_low'] += 1
-        elif seq['density_vz'] < 0.1:
-            density_ranges_vz['low'] += 1
-        elif seq['density_vz'] < 0.5:
-            density_ranges_vz['medium'] += 1
-        elif seq['density_vz'] < 1.0:
-            density_ranges_vz['high'] += 1
-        else:
-            density_ranges_vz['very_high'] += 1
-            
-        # IR density categorization
-        if seq['density_ir'] == 0:
-            density_ranges_ir['very_low'] += 1
-        elif seq['density_ir'] < 0.1:
-            density_ranges_ir['low'] += 1
-        elif seq['density_ir'] < 0.5:
-            density_ranges_ir['medium'] += 1
-        elif seq['density_ir'] < 1.0:
-            density_ranges_ir['high'] += 1
-        else:
-            density_ranges_ir['very_high'] += 1
-    
-    print("VZ Density Distribution:")
-    for category, count in density_ranges_vz.items():
-        print(f"  {category.replace('_', ' ').title()}: {count} sequences ({count/len(sequence_stats)*100:.1f}%)")
-    
-    print("IR Density Distribution:")
-    for category, count in density_ranges_ir.items():
-        print(f"  {category.replace('_', ' ').title()}: {count} sequences ({count/len(sequence_stats)*100:.1f}%)")
-    print()
+# import matplotlib.pyplot as plt
 
-    # Data quality insights
-    print("=== DATA QUALITY INSIGHTS ===")
-    zero_annotation_sequences_vz = sum(1 for seq in sequence_stats if seq['annotations_vz'] == 0)
-    zero_annotation_sequences_ir = sum(1 for seq in sequence_stats if seq['annotations_ir'] == 0)
-    
-    print(f"Sequences with zero VZ annotations: {zero_annotation_sequences_vz} ({zero_annotation_sequences_vz/len(sequence_stats)*100:.1f}%)")
-    print(f"Sequences with zero IR annotations: {zero_annotation_sequences_ir} ({zero_annotation_sequences_ir/len(sequence_stats)*100:.1f}%)")
-    
-    # Balance analysis
-    vz_ir_ratio = total_frames_vz / total_frames_ir if total_frames_ir > 0 else float('inf')
-    print(f"VZ to IR frames ratio: {vz_ir_ratio:.2f}:1")
-    
-    annotation_ratio = total_amount_annotations_vz / total_amount_annotations_ir if total_amount_annotations_ir > 0 else float('inf')
-    print(f"VZ to IR annotations ratio: {annotation_ratio:.2f}:1")
+# frames_vz = 296901
+# frames_ir = 296901
+# annot_vz = 280218
+# annot_ir = 293209
+
+# fig, ax = plt.subplots(figsize=(10, 5))
+# colors = ['#2E86AB', '#A23B72']
+
+# ratio_vz = annot_vz / frames_vz
+# ratio_ir = annot_ir / frames_ir
+
+# bar_width = 1.0
+# x_positions = [0, 1]
+
+# # Background bars (total frames)
+# ax.bar(x_positions, [frames_vz, frames_ir], 
+#        width=bar_width, color=colors, alpha=0.2, 
+#        label='Total Frames', edgecolor='grey', linewidth=0.5)
+
+# # Foreground bars (annotated frames)
+# ax.bar(x_positions, [annot_vz, annot_ir], 
+#        width=bar_width, color=colors, alpha=0.8,
+#        label='Annotated Frames', edgecolor='black', linewidth=0.5)
+
+# # Labels
+# for i, (fv, av, rv) in enumerate(zip([frames_vz, frames_ir], 
+#                                     [annot_vz, annot_ir], 
+#                                     [ratio_vz, ratio_ir])):
+#     ax.text(i, fv * 0.5, f'({rv:.2%})', 
+#             ha='center', va='center', fontweight='bold', 
+#             fontsize=11, color='white')
+
+# # Styling
+# ax.set_xlabel('Modality', fontsize=12, labelpad=10)
+# ax.set_ylabel('Number of Frames', fontsize=12, labelpad=10)
+# ax.set_title('Annotation Coverage by Modality', fontsize=14, pad=20)
+
+# ax.set_xticks(x_positions)
+# ax.set_xticklabels(['Visible Spectrum', 'Infrared'])
+
+# ax.spines['top'].set_visible(False)
+# ax.spines['right'].set_visible(False)
+# ax.grid(axis='y', alpha=0.3, linestyle='--')
+
+# plt.tight_layout()
+# plt.savefig("visualization/dataset_modality_coverage.png", dpi=300)
