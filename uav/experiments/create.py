@@ -4,7 +4,7 @@ from tqdm import tqdm
 from sklearn.model_selection import StratifiedShuffleSplit, RepeatedStratifiedKFold
 
 
-def create_experiments(seeds: list[int], source_dir: str, fold_size: int, n_splits: int = 5, n_repeats: int = 2):
+def create_experiments(seeds: list[int], source_dir: str, target_filepath: str, fold_size: int, n_splits: int = 5, n_repeats: int = 2):
     """Create the 'experiments.yml' file to allow later execution of the experiments one by one."""
 
     assert len(seeds) == 2
@@ -62,8 +62,6 @@ def create_experiments(seeds: list[int], source_dir: str, fold_size: int, n_spli
             'test_idx': test_idx,
         })
     
-    target_filepath = "experiments/rskf_splits.npy"
+    
     np.save(target_filepath, folds)
-
     print("Saved RSKF config to %s." % target_filepath)
-    print(np.array(folds).shape)

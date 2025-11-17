@@ -1,4 +1,13 @@
-gdown # allows downloading the dataset from google drive
-scikit-learn
+# General
 pandas
 numpy
+
+# Setup
+gdown
+
+# Experiments
+scikit-learn
+
+# Statistical Analysis
+scipy # statistical anlaysis
+statsmodels 

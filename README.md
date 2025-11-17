@@ -16,4 +16,9 @@ python3 -m pip install -r requirements.txt
 python3 -m pip install -e models/ultralytics/ultralytics
 ```
 
-Then walk through the setup.ipynb in order to set up the Anti-UAV300 dataset.
+### Notebooks
+To replicate experiments and results, use the following notebooks.
+
+1. <b>notebooks/1_setup.ipynb </b> in order to set up thPe Anti-UAV300 dataset
+2. <b>notebooks/2_experiments.ipynb</b> to replicate the ran experiments and 
+3. <b>notebooks/3_evaluation.ipynb</b> to run the statistical analysis.

@@ -1,5 +1,18 @@
+# Dataset
 datasets
-**.DS_Store
 **.png
+
+# Files 
+**.DS_Store
+
+# Cache
 **__pycache__**
+
+# Virtual Environment
 **venv**
+
+# Training Data
+results/exp_train_runs
+
+# Model weights
+models/weights
