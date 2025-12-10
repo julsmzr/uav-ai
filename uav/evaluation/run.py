@@ -1,24 +1,119 @@
+import numpy as np
+from scipy.stats import rankdata
 
+from uav.evaluation.utils import data_generator, append_eval_results, write_effect_size_results, write_metric_results, clean_csv_file
+from uav.evaluation.models import EffectSizeResult, MetricResult, Metric
+from uav.evaluation.implementations import SciPyEvaluation, REvaluation, PinguoinEvaluation, STACEvaluation, StatsmodelsHommelwithScipyEvaluation, StatsmodelsHommelwithREvaluation
 
-from uav.evaluation.utils import data_generator, append_eval_results
-from uav.evaluation.implementations import SciPyEvaluation
+def calculate_partial_eta_squared(vectors, rank_transform=True):
+        """Calculates Partial Eta Squared (np2) for repeated measures."""
+        data = np.column_stack(vectors)
+        
+        if rank_transform:
+            data = rankdata(data, axis=1)
+            
+        n_subjects, n_groups = data.shape
+        
+        grand_mean = np.mean(data)
+        subject_means = np.mean(data, axis=1)
+        group_means = np.mean(data, axis=0)  
 
-def run_full_evaluation(metrics_csv_filepath: str, results_csv_filepath: str, n_splits: int = 5) -> None:
+        ss_effect = n_subjects * np.sum((group_means - grand_mean)**2)
+        ss_total = np.sum((data - grand_mean)**2)
+        ss_subjects = n_groups * np.sum((subject_means - grand_mean)**2)
+        ss_error = ss_total - ss_subjects - ss_effect
+        
+        if (ss_effect + ss_error) == 0:
+            return 0.0
+            
+        return ss_effect / (ss_effect + ss_error)
+
+import numpy as np
+from scipy.stats import rankdata
+
+def calculate_eta_squared(vectors, rank_transform=True):
+    """Calculates Eta Squared (n2) for repeated measures."""
+    data = np.column_stack(vectors)
+    
+    if rank_transform:
+        data = rankdata(data, axis=1)
+        
+    n_subjects, _ = data.shape
+    
+    grand_mean = np.mean(data)
+    group_means = np.mean(data, axis=0)  
+
+    ss_effect = n_subjects * np.sum((group_means - grand_mean)**2)
+    ss_total = np.sum((data - grand_mean)**2)
+    
+    if ss_total == 0:
+        return 0.0
+    return ss_effect / ss_total
+
+def run_full_evaluation(
+    metrics_csv_filepath: str, 
+    stat_results_csv_filepath: str, 
+    eff_results_csv_filepath: str, 
+    metric_results_csv_filepath: str,
+    n_splits: int = 5, 
+    alpha: float = 0.05,
+    force_recreate: bool = False
+    ) -> None:
+    """Run full evaluation pipeline for all implementations."""
+    to_evaluate = [
+        SciPyEvaluation,
+        REvaluation,
+        PinguoinEvaluation,
+        STACEvaluation,
+        StatsmodelsHommelwithScipyEvaluation,
+        StatsmodelsHommelwithREvaluation
+    ]
+
+    effect_sizes: list[EffectSizeResult] = []
+    metric_results: list[MetricResult] = []
+
+    if force_recreate:
+        clean_csv_file(stat_results_csv_filepath)
+        clean_csv_file(eff_results_csv_filepath)
 
     for measurement_data_block in data_generator(metrics_csv_filepath, n_splits):
+        for Implementation in to_evaluate:
+            append_eval_results(stat_results_csv_filepath, Implementation(measurement_data_block, alpha).evaluate())
+    
+        experiments = {
+            "VZ": measurement_data_block.measurements_one,
+            "IR": measurement_data_block.measurements_two,
+            "HY": measurement_data_block.measurements_three
+        }
         
-        scipy_res = SciPyEvaluation(measurement_data_block).evaluate()
-        append_eval_results(results_csv_filepath, scipy_res)
+        ne2 = calculate_eta_squared(
+                    vectors=[experiments["VZ"], experiments["IR"], experiments["HY"]], 
+                    rank_transform=True
+                )
 
+        pe2 = calculate_partial_eta_squared(
+                    vectors=[experiments["VZ"], experiments["IR"], experiments["HY"]], 
+                    rank_transform=True
+                )
+        
+        print(ne2, pe2)
 
+        effect_sizes.append(
+            EffectSizeResult(
+                measurement_data_block.measured_metric, 
+                pe2
+            )
+        )
 
-# STAC
-# https://github.com/citiususc/stac?tab=readme-ov-file
-# https://tec.citius.usc.es/stac/doc/
+        for exp_label, data in experiments.items():
+            metric_results.append(
+                 MetricResult(
+                    experiment=exp_label, 
+                    metric=measurement_data_block.measured_metric, 
+                    mean=np.mean(data), 
+                    std=np.std(data)
+                )
+            )
 
-# TODO: do this once with scipy, once with statsmodels, once with SCAT library, 
-# then run as subprocess the R script as well. each should write results to a file. 
-# then use matplotlib to plot differences in s.a. results.
-
-# also rework visualization pipeline to render multiple plots (start in setup script end)
-# violin plots for P,R,.. for measurements, then for different s.a. libs find vis strategy
+    write_effect_size_results(eff_results_csv_filepath, effect_sizes)
+    write_metric_results(metric_results_csv_filepath, metric_results)

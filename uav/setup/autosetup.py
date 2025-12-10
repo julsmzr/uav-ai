@@ -7,8 +7,8 @@ def automated_setup(verbose: bool) -> None:
     print("Downloading...")    
     success = download_and_extract(
         url="https://drive.google.com/uc?id=1NPYaop35ocVTYWHOYQQHn8YHsM9jmLGr", # Dataset provided via GitHub: https://github.com/ucas-vg/Anti-UAV
-        zip_path="../datasets/anti-uav300-raw.zip",
-        extract_dir="../datasets/anti-uav300-raw",
+        zip_path="datasets/anti-uav300-raw.zip",
+        extract_dir="datasets/anti-uav300-raw",
         verbose=verbose,
         remove_zip = True
     )
@@ -18,8 +18,8 @@ def automated_setup(verbose: bool) -> None:
 
     print("Formatting...")
     success = process_dataset(
-        source_dir = "../datasets/anti-uav300-raw",
-        target_dir = "../datasets/anti-uav300",
+        source_dir = "datasets/anti-uav300-raw",
+        target_dir = "datasets/anti-uav300",
         verbose=verbose,
         remove_source = True,
     )

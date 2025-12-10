@@ -4,6 +4,7 @@ numpy
 
 # Setup
 gdown
+opencv-python
 
 # Experiments
 scikit-learn
@@ -11,3 +12,4 @@ scikit-learn
 # Statistical Analysis
 scipy # statistical anlaysis
 statsmodels 
+pingouin

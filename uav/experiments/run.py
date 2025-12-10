@@ -18,7 +18,6 @@ def current_milli_time():
 def run_repeated_k_fold(model_seed: int, splits: list, experiment_name: str, epochs: int, model_weight_path: str, run_dir: str):
 
     for split in splits:
-
         fold = split['fold']
         print(f"Processing fold {fold}")
         
@@ -30,8 +29,8 @@ def run_repeated_k_fold(model_seed: int, splits: list, experiment_name: str, epo
 
         tpath = os.path.join(run_dir, expname_train)
         vpath = os.path.join(run_dir, expname_val)
+
         if os.path.exists(os.path.join(tpath, "results.csv")) and os.path.exists(os.path.join(vpath, "predictions.json")):
-            print("skipping", expname_train)
             continue
         elif os.path.exists(vpath) or os.path.exists(vpath):
             shutil.rmtree(tpath)
@@ -117,6 +116,5 @@ def run_experiments(experiment_rskf_file_npy: str, metrics_file_txt, model_seeds
                     append_results(metrics_file_txt, result_row)
             except KeyboardInterrupt:
                 print("Run cancelled via KeyboardInterrupt.")
-                # TODO potentially move cleanup here? 
             except Exception as e:
                 print("unexpected exception!", e)
