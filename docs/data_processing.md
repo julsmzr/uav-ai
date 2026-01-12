@@ -89,7 +89,7 @@ will be transformed to
 
 ---
 ## COCO
-The COCO format as proposed by Lin et. al (2015)[1] describes the following structure:
+The YOLO format modifies COCO as proposed by Lin et. al (2015)[1] and describes the following structure:
 
 ### Folder Structure
 ```
@@ -116,7 +116,7 @@ dataset/
 
 ### Label Format
 ```
-cls x_min y_min width height
+cls x_center y_center width height
 ```
 
 Example:
