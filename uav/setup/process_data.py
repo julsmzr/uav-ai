@@ -73,8 +73,11 @@ def get_target_sequence_count(source_dir: str) -> int:
 def remove_sourcedir(source_dir: str, verbose: bool) -> None:
     """Remove the source directory if it exists."""
     if os.path.exists(source_dir):
-        shutil.rmtree(source_dir)
-        vprint(verbose, "Source directory was removed successfully.")
+        try:
+            shutil.rmtree(source_dir)
+            vprint(verbose, "Source directory was removed successfully.")
+        except OSError as e:
+            vprint(verbose, f"Warning: Could not remove source directory {source_dir}: {e}")
 
 def validate_existing_sequences(source_dir: str, target_imagesdir: str, target_labelsdir: str, verbose: bool) -> tuple[dict, list[str]]:
     """Check if sequences have already been extracted by comparing file counts. Returns statistics dict and list of validated sequence names."""
@@ -143,6 +146,7 @@ def validate_existing_sequences(source_dir: str, target_imagesdir: str, target_l
     return statistics, validated_sequences
 
 def format_dataset(source_dir: str, target_dir: str, verbose: bool, remove_source: bool) -> None:
+    """Converts Anti-UAV300 raw MP4 videos and JSON annotations to YOLO format."""
     target_imagesdir = os.path.join(target_dir, "images")
     target_labelsdir = os.path.join(target_dir, "labels")
 
@@ -181,6 +185,11 @@ def format_dataset(source_dir: str, target_dir: str, verbose: bool, remove_sourc
 
             statistics[sequence_dirname] = (amount_frames_vz, amount_frames_ir, amount_labels_vz, amount_labels_ir)
 
+            if remove_source:
+                sequence_source_dir = os.path.join(subset_dir, sequence_dirname)
+                if os.path.exists(sequence_source_dir):
+                    shutil.rmtree(sequence_source_dir)
+
     statistics_filepath = os.path.join(target_dir, "statistics.json")
     with open(statistics_filepath, "w") as f:
         json.dump(statistics, f, indent=4)
@@ -192,6 +201,7 @@ def format_dataset(source_dir: str, target_dir: str, verbose: bool, remove_sourc
     vprint(verbose, "Conversion done!")
 
 def process_dataset(source_dir: str, target_dir: str, verbose: bool, remove_source: bool) -> bool:
+    """Processes dataset with error handling, returns True on success."""
     print(source_dir)
     if not os.path.exists(source_dir):
         raise RuntimeError(f"Source directory '{source_dir}' does not exist.")

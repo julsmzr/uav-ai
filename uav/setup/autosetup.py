@@ -2,6 +2,7 @@ from uav.setup.download_data import download_and_extract
 from uav.setup.process_data import process_dataset
 
 def automated_setup(verbose: bool) -> None:
+    """Automatically downloads and processes the Anti-UAV300 dataset."""
     print("Running automated setup.")
 
     print("Downloading...")    

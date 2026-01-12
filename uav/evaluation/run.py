@@ -5,7 +5,8 @@ from uav.evaluation.utils import data_generator, append_eval_results, write_effe
 from uav.evaluation.models import EffectSizeResult, MetricResult, Metric
 from uav.evaluation.implementations import SciPyEvaluation, REvaluation, PinguoinEvaluation, STACEvaluation, StatsmodelsHommelwithScipyEvaluation, StatsmodelsHommelwithREvaluation
 
-def calculate_partial_eta_squared(vectors, rank_transform=True):
+
+def calculate_partial_eta_squared(vectors: list, rank_transform: bool = True) -> float:
         """Calculates Partial Eta Squared (np2) for repeated measures."""
         data = np.column_stack(vectors)
         
@@ -28,10 +29,7 @@ def calculate_partial_eta_squared(vectors, rank_transform=True):
             
         return ss_effect / (ss_effect + ss_error)
 
-import numpy as np
-from scipy.stats import rankdata
-
-def calculate_eta_squared(vectors, rank_transform=True):
+def calculate_eta_squared(vectors: list, rank_transform: bool = True) -> float:
     """Calculates Eta Squared (n2) for repeated measures."""
     data = np.column_stack(vectors)
     
@@ -96,8 +94,10 @@ def run_full_evaluation(
                     rank_transform=True
                 )
         
-        print(ne2, pe2)
-
+        if ne2 != pe2:
+            print("Effect size etq sq. does not equal partial eta sq.")
+            print("Metric", measurement_data_block.measured_metric, ";", "eta sq.", ne2, "partial eta sq.", pe2)
+        
         effect_sizes.append(
             EffectSizeResult(
                 measurement_data_block.measured_metric, 

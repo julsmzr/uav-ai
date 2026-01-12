@@ -5,7 +5,7 @@ from uav.visualization.utils import load_results
 from uav.visualization.cfg import IMPLEMENTATIONS, COLORS, MARKERS, SIG_COLOR, SIG_THRESHOLD
 
 def render_wilcoxon(results_filepath: str, wilcoxon_png_filepath: str) -> None:
-
+    """Renders 3-panel Wilcoxon pairwise comparison p-values visualization."""
     df = load_results(results_filepath)
 
     plt.rcParams['font.family'] = 'sans-serif'

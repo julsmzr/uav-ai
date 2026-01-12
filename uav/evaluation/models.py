@@ -10,14 +10,6 @@ class Metric(Enum):
     mAP50 = "mAP50"
     mAP50_95 = "mAP50_95"
 
-class ImplementationRegistry(Enum):
-    SCIPY = "scipy"
-    R = "r"
-    PINGUOIN = "pinguoin"
-    STAC = "stac"
-    STATSMODELS_SCIPY = "statsmodels_scipy"
-    STATSMODELS_R = "statsmodels_r"
-
 class FullAnalaysisRegistry(Enum):
     R = "full_r"
     SCIPY_STATSMODELS = "full_scipy_statsmodels"
@@ -61,4 +53,3 @@ class ImplementationEvaluation(ABC):
     @abstractmethod
     def evaluate(self) -> EvaluationResult:
         raise NotImplementedError("Please implement abstract evaluate() function for the given implementation.")
-

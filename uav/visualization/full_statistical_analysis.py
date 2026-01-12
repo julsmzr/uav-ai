@@ -4,31 +4,49 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 import pandas as pd
-import io
 
 from uav.evaluation.models import FullAnalaysisRegistry
 from uav.visualization.utils import load_results
-from uav.visualization.cfg import IMPLEMENTATIONS, COLORS, MARKERS, SIG_COLOR, SIG_THRESHOLD
-
-
-# TODO
-# 1. parse together datablock depending on analysis type
-# 2. render full analysis plot
 
 def render_full_statistical_analysis(results_filepath: str, full_analysis_png_filepath_base: str, analysis: FullAnalaysisRegistry) -> None:
-
-    png_filepath = f"{full_analysis_png_filepath_base}/{analysis.value}.png"
+    """Render full statistical analysis plot for a specific analysis implementation."""
+    png_filepath = f"{full_analysis_png_filepath_base}{analysis.value}.png"
     df = load_results(results_filepath)
 
+    analysis_mapping = {
+        FullAnalaysisRegistry.R: ["r"],
+        FullAnalaysisRegistry.SCIPY_STATSMODELS: ["scipy", "statsmodels_scipy"],
+        FullAnalaysisRegistry.PINGUOIN_STATSMODELS: ["pinguoin", "statsmodels_pinguoin"]
+    }
 
-    df = pd.read_csv(io.StringIO(
-        """implementation,measured_metric,friedman_p,wilcoxon_p_1v2,wilcoxon_p_2v3,wilcoxon_p_1v3,hommel_p_1v2,hommel_p_2v3,hommel_p_1v3,effect_size
-            r,PRECISION,0.2026061711071116,0.8589549227374824,0.1240427930900948,0.1626733150719467,0.8589549227374824,0.2480855861801896,0.3253466301438934
-            r,RECALL,0.070713214998585,1.0,0.0735939238114404,0.0979893027079174,1.0,0.1471878476228809,0.1959786054158348
-            r,mAP50,0.0572888580930433,0.9527650219907529,0.0735939238114404,0.0626713878689624,0.9527650219907529,0.1471878476228809,0.1253427757379249
-            r,mAP50_95,0.013123728736941,0.9527650219907529,0.0555329808159427,0.0626713878689624,0.9527650219907529,0.1110659616318854,0.1253427757379249
-        """
-    ))
+    implementations = analysis_mapping[analysis]
+
+    df_filtered = df[df['implementation'].isin(implementations)]
+
+    if len(implementations) == 1:
+        df = df_filtered.copy()
+    else:
+        merged_rows = []
+        for metric in df_filtered['measured_metric'].unique():
+            metric_rows = df_filtered[df_filtered['measured_metric'] == metric]
+
+            merged_row = {'implementation': '_'.join(implementations), 'measured_metric': metric}
+
+            for col in ['friedman_p', 'wilcoxon_p_1v2', 'wilcoxon_p_2v3', 'wilcoxon_p_1v3',
+                       'hommel_p_1v2', 'hommel_p_2v3', 'hommel_p_1v3']:
+                values = metric_rows[col].values
+                merged_row[col] = next((v for v in values if v >= 0), -1.0)
+
+            merged_rows.append(merged_row)
+
+        df = pd.DataFrame(merged_rows)
+
+    analysis_titles = {
+        FullAnalaysisRegistry.R: "Full Statistical Analysis (R)",
+        FullAnalaysisRegistry.SCIPY_STATSMODELS: "Full Statistical Analysis (SciPy + Statsmodels)",
+        FullAnalaysisRegistry.PINGUOIN_STATSMODELS: "Full Statistical Analysis (Pingouin + Statsmodels)"
+    }
+    title = analysis_titles.get(analysis, "Full Statistical Analysis")
 
     plt.rcParams['font.family'] = 'sans-serif'
     plt.rcParams['font.size'] = 10
@@ -103,7 +121,7 @@ def render_full_statistical_analysis(results_filepath: str, full_analysis_png_fi
                 ax.text(x_base + text_offset_x, val, f'{val:.3f}', 
                         ha=ha_align, va='center', fontsize=7, fontweight=fw, color='black')
 
-    ax.set_title('Full Statistical Analysis in R', fontweight='bold', fontsize=14, pad=15)
+    ax.set_title(title, fontweight='bold', fontsize=14, pad=15)
     ax.set_ylabel('P-Value')
     ax.set_xticks(x_indices)
     ax.set_xticklabels(METRICS, fontsize=11)

@@ -2,7 +2,7 @@ import numpy as np
 
 from uav.evaluation.utils import data_generator
 
-def analyze_metrics(filepath: str):
+def analyze_metrics(filepath: str) -> None:
     """Calculates macro mean and std for each experiment group metrics (VZ, IR, HY)."""
     print(f"{'Metric':<15} | {'Experiment':<10} | {'Mean':<10} | {'Std Dev':<10}")
     print("-" * 50)
@@ -29,4 +29,3 @@ def analyze_metrics(filepath: str):
                 print(f"{m_name:<15} | {exp_label:<10} | {mean_val:.4f} ± {std_val:.4f}")
         
         print("-" * 50)
-

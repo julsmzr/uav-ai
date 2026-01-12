@@ -11,17 +11,19 @@ from uav.experiments.data import TempTrainingContext, Modality
 from ultralytics import YOLO # type: ignore
 
 
-def current_milli_time():
+def current_milli_time() -> int:
+    """Returns current time in milliseconds."""
     return round(time.time() * 1000)
 
 # run 5x5 fold rskf for single seed
 def run_repeated_k_fold(model_seed: int, splits: list, experiment_name: str, epochs: int, model_weight_path: str, run_dir: str):
-
+    """Trains and evaluates YOLO model on all RSKF splits, yielding metrics for each fold."""
     for split in splits:
         fold = split['fold']
         print(f"Processing fold {fold}")
         
         def exp_name(template: str, fold_idx: str, ending: str) -> str:
+            """Generates experiment name with fold index and train/val suffix."""
             return "%s-f_%s_%s" % (template, fold_idx, ending)
         
         expname_train = exp_name(experiment_name, fold, "train")
@@ -32,9 +34,17 @@ def run_repeated_k_fold(model_seed: int, splits: list, experiment_name: str, epo
 
         if os.path.exists(os.path.join(tpath, "results.csv")) and os.path.exists(os.path.join(vpath, "predictions.json")):
             continue
-        elif os.path.exists(vpath) or os.path.exists(vpath):
-            shutil.rmtree(tpath)
-            shutil.rmtree(vpath)
+        elif os.path.exists(tpath) or os.path.exists(vpath):
+            if os.path.exists(tpath):
+                try:
+                    shutil.rmtree(tpath)
+                except OSError as e:
+                    print(f"Warning: Could not remove {tpath}: {e}")
+            if os.path.exists(vpath):
+                try:
+                    shutil.rmtree(vpath)
+                except OSError as e:
+                    print(f"Warning: Could not remove {vpath}: {e}")
         
         with TempTrainingContext(split['filepaths'], Modality.VISIBLE, split['train_idx'], split['test_idx']) as temp_ctx:
 
@@ -80,6 +90,7 @@ def run_repeated_k_fold(model_seed: int, splits: list, experiment_name: str, epo
             yield [experiment_name] + metric_values + [training_time_ms, eval_time_ms]
 
 def append_results(results_csv_filepath: str, result_row: list) -> None:
+    """Appends experiment result row to CSV file, creating header if file doesn't exist."""
     file_exists = os.path.exists(results_csv_filepath)
 
     with open(results_csv_filepath, "a", newline='') as f:
@@ -99,7 +110,8 @@ def append_results(results_csv_filepath: str, result_row: list) -> None:
             
         writer.writerow(result_row)
 
-def run_experiments(experiment_rskf_file_npy: str, metrics_file_txt, model_seeds: list[int], epochs: int, model_weight_path: str, run_dir: str):
+def run_experiments(experiment_rskf_file_npy: str, metrics_file_txt: str, model_seeds: list[int], epochs: int, model_weight_path: str, run_dir: str) -> None:
+    """Runs experiments for all modalities and model seeds."""
 
     # len: n_repeats * n_splits of {fold idx, filepaths, train indices, test indices}
     splits = np.load(experiment_rskf_file_npy, allow_pickle=True)

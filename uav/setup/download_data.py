@@ -6,6 +6,7 @@ from uav.setup.utils import vprint
 
 
 def download(url: str, zip_path: str, verbose: bool) -> None:
+    """Downloads file from Google Drive URL to specified path."""
     gdown.download(url, zip_path, quiet=False)
 
     if not os.path.exists(zip_path):
@@ -21,6 +22,7 @@ def download(url: str, zip_path: str, verbose: bool) -> None:
         vprint(verbose, f"Dataset download completed.")
 
 def extract(zip_path: str, extract_dir: str, verbose: bool, remove_zip: bool) -> None:
+    """Extracts ZIP archive to target directory and optionally removes the ZIP file."""
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         zip_ref.extractall(extract_dir)
 
@@ -30,12 +32,13 @@ def extract(zip_path: str, extract_dir: str, verbose: bool, remove_zip: bool) ->
 
     vprint(verbose, f"File extracted to {extract_dir}")
 
-def download_and_extract(url: str, 
+def download_and_extract(url: str,
     zip_path: str,
     extract_dir: str,
     verbose: bool,
     remove_zip: bool
 ) -> bool:
+    """Downloads and extracts dataset from Google Drive, returns True on success."""
     try:
         os.makedirs("datasets", exist_ok=True)
         

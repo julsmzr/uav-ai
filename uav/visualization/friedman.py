@@ -6,7 +6,7 @@ from uav.visualization.cfg import IMPLEMENTATIONS, COLORS, MARKERS, SIG_COLOR, S
 
 
 def render_friedman(results_filepath: str, friedman_png_filepath: str) -> None:
-
+    """Renders Friedman test p-values visualization with significance threshold."""
     df = load_results(results_filepath)
 
     plt.rcParams['font.family'] = 'sans-serif'

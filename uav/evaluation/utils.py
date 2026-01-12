@@ -89,15 +89,25 @@ def write_metric_results(results_csv_filepath: str, metrics: list[MetricResult])
             ])
 
 def clean_csv_file(csv_filepath: str) -> None:
+    """Removes CSV file if it exists."""
     if os.path.exists(csv_filepath):
-        os.remove(csv_filepath)
+        try:
+            os.remove(csv_filepath)
+        except OSError as e:
+            print(f"Warning: Could not remove {csv_filepath}: {e}")
 
 def data_generator(metrics_csv_filepath: str, n_splits: int = 5):
     """Provides metric-wise measurement vectors."""
     results = parse_results(metrics_csv_filepath, n_splits)
-    experiment_vz = results[:25]
-    experiment_ir = results[25:50]
-    experiment_hy = results[50:]
 
-    for metric_idx, metric_name in enumerate(Metric): 
+    total_results = len(results)
+    if total_results % 3 != 0:
+        raise ValueError(f"Expected results divisible by 3 (for vz/ir/hy experiments), got {total_results} results")
+
+    results_per_experiment = total_results // 3
+    experiment_vz = results[:results_per_experiment]
+    experiment_ir = results[results_per_experiment:2*results_per_experiment]
+    experiment_hy = results[2*results_per_experiment:]
+
+    for metric_idx, metric_name in enumerate(Metric):
         yield MeasurementDataBlock(metric_name, experiment_vz[:, metric_idx], experiment_ir[:, metric_idx] , experiment_hy[:, metric_idx])
