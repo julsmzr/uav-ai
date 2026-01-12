@@ -4,7 +4,7 @@ from uav.evaluation.models import FullAnalaysisRegistry
 from uav.visualization.friedman import render_friedman
 from uav.visualization.wilcoxon import render_wilcoxon
 from uav.visualization.full_statistical_analysis import render_full_statistical_analysis
-from uav.visualization.visualization import render_violin_plots
+from uav.visualization.metrics import render_violin_plots
 
 
 def run_all(
