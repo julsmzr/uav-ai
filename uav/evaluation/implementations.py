@@ -90,21 +90,6 @@ class StatsmodelsHommelwithScipyEvaluation(ImplementationEvaluation):
 
         return EvaluationResult("statsmodels_scipy", measured_metric, friedman_p, wilcoxon_ps, hommel_ps)
 
-class StatsmodelsHommelwithREvaluation(ImplementationEvaluation):
-    def evaluate(self) -> EvaluationResult:
-        measured_metric = self.measurement_data_block.measured_metric
-
-        friedman_p: float = -1.0
-        wilcoxon_ps: list[float] = [-1.0, -1.0, -1.0]
-        hommel_ps: list[float] = [-1.0, -1.0, -1.0]
-
-        start_result = REvaluation(self.measurement_data_block).evaluate()
-
-        _, hommel_ps_array, _, _ = statsmodels_multipletests(start_result.wilcoxon_ps, alpha=self.alpha, method='hommel')
-        hommel_ps = hommel_ps_array.tolist()
-
-        return EvaluationResult("statsmodels_r", measured_metric, friedman_p, wilcoxon_ps, hommel_ps)
-
 class StatsmodelsHommelwithPinguoinEvaluation(ImplementationEvaluation):
     def evaluate(self) -> EvaluationResult:
         measured_metric = self.measurement_data_block.measured_metric

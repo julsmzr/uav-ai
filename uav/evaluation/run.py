@@ -3,7 +3,7 @@ from scipy.stats import rankdata
 
 from uav.evaluation.utils import data_generator, append_eval_results, write_effect_size_results, write_metric_results, clean_csv_file
 from uav.evaluation.models import EffectSizeResult, MetricResult, Metric
-from uav.evaluation.implementations import SciPyEvaluation, REvaluation, PinguoinEvaluation, STACEvaluation, StatsmodelsHommelwithScipyEvaluation, StatsmodelsHommelwithREvaluation
+from uav.evaluation.implementations import SciPyEvaluation, REvaluation, PinguoinEvaluation, STACEvaluation, StatsmodelsHommelwithScipyEvaluation, StatsmodelsHommelwithPinguoinEvaluation
 
 
 def calculate_eta_squared(vectors: list, rank_transform: bool = True) -> float:
@@ -41,7 +41,7 @@ def run_full_evaluation(
         PinguoinEvaluation,
         STACEvaluation,
         StatsmodelsHommelwithScipyEvaluation,
-        StatsmodelsHommelwithREvaluation
+        StatsmodelsHommelwithPinguoinEvaluation
     ]
 
     effect_sizes: list[EffectSizeResult] = []
@@ -50,6 +50,7 @@ def run_full_evaluation(
     if force_recreate:
         clean_csv_file(stat_results_csv_filepath)
         clean_csv_file(eff_results_csv_filepath)
+        clean_csv_file(metric_results_csv_filepath)
 
     for measurement_data_block in data_generator(metrics_csv_filepath, n_splits):
         for Implementation in to_evaluate:
