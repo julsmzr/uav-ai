@@ -7,8 +7,6 @@ This project was created during the Advanced Topics in Artificial Intelligence c
 ### Setup
 
 ```bash
-git submodule update --init
-
 python3 -m venv venv
 source venv/bin/activate
 
