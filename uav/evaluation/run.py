@@ -6,29 +6,6 @@ from uav.evaluation.models import EffectSizeResult, MetricResult, Metric
 from uav.evaluation.implementations import SciPyEvaluation, REvaluation, PinguoinEvaluation, STACEvaluation, StatsmodelsHommelwithScipyEvaluation, StatsmodelsHommelwithREvaluation
 
 
-def calculate_partial_eta_squared(vectors: list, rank_transform: bool = True) -> float:
-        """Calculates Partial Eta Squared (np2) for repeated measures."""
-        data = np.column_stack(vectors)
-        
-        if rank_transform:
-            data = rankdata(data, axis=1)
-            
-        n_subjects, n_groups = data.shape
-        
-        grand_mean = np.mean(data)
-        subject_means = np.mean(data, axis=1)
-        group_means = np.mean(data, axis=0)  
-
-        ss_effect = n_subjects * np.sum((group_means - grand_mean)**2)
-        ss_total = np.sum((data - grand_mean)**2)
-        ss_subjects = n_groups * np.sum((subject_means - grand_mean)**2)
-        ss_error = ss_total - ss_subjects - ss_effect
-        
-        if (ss_effect + ss_error) == 0:
-            return 0.0
-            
-        return ss_effect / (ss_effect + ss_error)
-
 def calculate_eta_squared(vectors: list, rank_transform: bool = True) -> float:
     """Calculates Eta Squared (n2) for repeated measures."""
     data = np.column_stack(vectors)
@@ -89,19 +66,10 @@ def run_full_evaluation(
                     rank_transform=True
                 )
 
-        pe2 = calculate_partial_eta_squared(
-                    vectors=[experiments["VZ"], experiments["IR"], experiments["HY"]], 
-                    rank_transform=True
-                )
-        
-        if ne2 != pe2:
-            print("Effect size etq sq. does not equal partial eta sq.")
-            print("Metric", measurement_data_block.measured_metric, ";", "eta sq.", ne2, "partial eta sq.", pe2)
-        
         effect_sizes.append(
             EffectSizeResult(
                 measurement_data_block.measured_metric, 
-                pe2
+                ne2
             )
         )
 
