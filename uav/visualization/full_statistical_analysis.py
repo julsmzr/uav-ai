@@ -73,9 +73,9 @@ def render_full_statistical_analysis(results_filepath: str, full_analysis_png_fi
     x_indices = np.arange(len(METRICS))
     offset_map = {'Friedman': -0.2, 'Wilcoxon': 0.0, 'Hommel': 0.2}
 
+    ax.axhline(SIG_THRESHOLD, color=SIG_COLOR, linestyle='--', linewidth=1.5, label=f'Significance (p={SIG_THRESHOLD})', zorder=2)
     ax.axhspan(0, SIG_THRESHOLD, facecolor=SIG_COLOR, alpha=0.1, zorder=0)
-    ax.axhline(SIG_THRESHOLD, color=SIG_COLOR, linestyle='--', linewidth=1.5, label=f'Significance (p={SIG_THRESHOLD})')
-
+    
     for i, metric in enumerate(METRICS):
         row = df[df['measured_metric'] == metric].iloc[0]
         
@@ -96,38 +96,61 @@ def render_full_statistical_analysis(results_filepath: str, full_analysis_png_fi
         
         pair_names = ['1v2', '2v3', '1v3']
 
+        wilcoxon_vals = [row[c] for c in ['wilcoxon_p_1v2', 'wilcoxon_p_2v3', 'wilcoxon_p_1v3']]
+        hommel_vals = [row[c] for c in ['hommel_p_1v2', 'hommel_p_2v3', 'hommel_p_1v3']]
+
+        equal_pairs = {pair: (wilc == homm) for pair, wilc, homm in zip(pair_names, wilcoxon_vals, hommel_vals)}
+
         for test_name, cols in test_groups:
             vals = [row[c] for c in cols]
             x_base = x_indices[i] + offset_map[test_name]
-            
+
             ax.vlines(x_base, min(vals), max(vals), color=COLOR_MAP[test_name], alpha=0.3, linewidth=2, zorder=1)
-            
+
             for val, pair in zip(vals, pair_names):
-                ax.scatter(x_base, val, color=COLOR_MAP[test_name], marker=MARKER_MAP[pair], 
+                ax.scatter(x_base, val, color=COLOR_MAP[test_name], marker=MARKER_MAP[pair],
                         s=80, edgecolors='white', zorder=3)
-                
+
+                if equal_pairs[pair]:
+                    continue
+
                 fw = 'bold' if val < SIG_THRESHOLD else 'normal'
-                
-                if pair == '1v3': 
+
+                if pair == '1v3':
                     ha_align = 'right'
                     text_offset_x = -0.04
-                elif pair == '2v3': 
+                elif pair == '2v3':
                     ha_align = 'left'
                     text_offset_x = 0.04
+                elif pair == '1v2' and test_name == 'Wilcoxon':
+                    ha_align = 'right'
+                    text_offset_x = -0.04
                 else:
                     ha_align = 'left'
                     text_offset_x = 0.04
-                
-                ax.text(x_base + text_offset_x, val, f'{val:.3f}', 
+
+                ax.text(x_base + text_offset_x, val, f'{val:.3f}',
                         ha=ha_align, va='center', fontsize=7, fontweight=fw, color='black')
 
+        for pair, wilc_val, homm_val in zip(pair_names, wilcoxon_vals, hommel_vals):
+            if wilc_val == homm_val:
+                x_wilc = x_indices[i] + offset_map['Wilcoxon']
+                x_homm = x_indices[i] + offset_map['Hommel']
+                ax.plot([x_wilc, x_homm], [wilc_val, homm_val], color='gray', linewidth=1, alpha=0.5, zorder=1)
+
+                x_center = (x_wilc + x_homm) / 2
+                fw = 'bold' if wilc_val < SIG_THRESHOLD else 'normal'
+                ax.text(x_center, wilc_val + 0.01, f'{wilc_val:.3f}',
+                        ha='center', va='bottom', fontsize=7, fontweight=fw, color='black', zorder=4)
+
     ax.set_title(title, fontweight='bold', fontsize=14, pad=15)
-    ax.set_ylabel('P-Value')
+    ax.set_ylabel('P-Value [1]')
     ax.set_xticks(x_indices)
     ax.set_xticklabels(METRICS, fontsize=11)
-    ax.set_ylim(-0.05, 1.1)
     ax.grid(axis='y', linestyle=':', alpha=0.6)
 
+    current_ylim = ax.get_ylim()
+    ax.set_ylim(0, current_ylim[1])
 
     legend_elements = [
         Line2D([0], [0], marker='o', color='w', markerfacecolor=COLOR_MAP['Friedman'], label='Friedman', markersize=8),
@@ -139,10 +162,15 @@ def render_full_statistical_analysis(results_filepath: str, full_analysis_png_fi
         Line2D([0], [0], marker=MARKER_MAP['1v3'], color='gray', label='vz vs hy', markerfacecolor='gray', markersize=8, linestyle='None'),
     ]
 
-    ax.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(0.5, -0.08),
-            ncol=2, frameon=False, title="Legend")
+    legend1 = ax.legend(handles=legend_elements, loc='upper center', bbox_to_anchor=(0.5, -0.08),
+                        ncol=2, frameon=False, title="Legend")
+    ax.add_artist(legend1)
 
-    plt.subplots_adjust(bottom=0.2)
+    sig_element = Line2D([0], [0], color=SIG_COLOR, linestyle='--', linewidth=1.5, label=f'Significance (p={SIG_THRESHOLD})')
+    ax.legend(handles=[sig_element], loc='upper center', bbox_to_anchor=(0.5, -0.25),
+              ncol=1, frameon=False)
+
+    plt.subplots_adjust(bottom=0.28)
     plt.tight_layout()
     plt.savefig(png_filepath, dpi=300)
     plt.close()

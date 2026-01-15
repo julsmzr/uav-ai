@@ -41,21 +41,21 @@ def render_friedman(results_filepath: str, friedman_png_filepath: str) -> None:
         
         center_sr = (x_scipy + x_r) / 2
         fw_sr = 'bold' if val_scipy < SIG_THRESHOLD else 'normal'
-        ax.text(center_sr, val_scipy + 0.01, f'{val_scipy:.3f}', 
+        ax.text(center_sr, val_scipy + 0.005, f'{val_scipy:.3f}', 
                 ha='center', va='bottom', fontsize=8, fontweight=fw_sr)
         
         fw_p = 'bold' if val_ping < SIG_THRESHOLD else 'normal'
-        ax.text(x_ping, val_ping + 0.01, f'{val_ping:.3f}', 
+        ax.text(x_ping, val_ping + 0.004, f'{val_ping:.3f}', 
                 ha='center', va='bottom', fontsize=8, fontweight=fw_p)
 
     ax.axhline(SIG_THRESHOLD, color=SIG_COLOR, linestyle='--', linewidth=1.5, label=f'Significance (p={SIG_THRESHOLD})')
     ax.axhspan(0, SIG_THRESHOLD, facecolor=SIG_COLOR, alpha=0.1, zorder=0)
-    ax.set_ylabel('Friedman P-Value')
+    ax.set_ylabel('Friedman P-Value [1]')
     ax.set_title('Friedman Test Results', fontweight='bold', pad=15)
+    ax.set_ylim(bottom=0.0)
     ax.set_xticks(x)
     ax.set_xticklabels(METRICS)
     ax.grid(axis='y', linestyle=':', alpha=0.6, linewidth=1)
-    ax.set_ylim(0, df['friedman_p'].max() + 0.05)
     ax.legend(title='Implementation', frameon=True, loc='upper right')
 
     plt.tight_layout()
