@@ -1,6 +1,6 @@
 # Evaluation of YOLOv12 for Multi-Modal Real-Time Visual UAV Detection and Tracking
 
-This project was created during the Advanced Topics in Artificial Intelligence course at PWR under supervision of Maciej Huk. The final project report can be found in [docs/project_report.pdf](docs/project_report.pdf) and the final presentation in [docs/presentation.pdf](docs/presentation.pdf).
+This project was created during the Advanced Topics in Artificial Intelligence course at PWR under supervision of Maciej Huk. The final project report can be found in [docs/report.pdf](docs/report.pdf) and the final presentation in [docs/presentation.pdf](docs/presentation.pdf).
 
 ## Research Summary
 
