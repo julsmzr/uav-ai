@@ -123,7 +123,7 @@ class PinguoinEvaluation(ImplementationEvaluation):
             'v3': {i: v for i, v in enumerate(measurements_three)},
         })
 
-        friedman_p = pg.friedman(data=df, method='f')['p-unc'].values[0]
+        friedman_p = pg.friedman(data=df, method='chisq')['p-unc'].values[0]
                     
         wilcoxon_ps[0] =  pg.wilcoxon(measurements_one, measurements_two)['p-val'].values[0]
         wilcoxon_ps[1] =  pg.wilcoxon(measurements_two, measurements_three)['p-val'].values[0]

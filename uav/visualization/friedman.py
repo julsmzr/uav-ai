@@ -28,25 +28,41 @@ def render_friedman(results_filepath: str, friedman_png_filepath: str) -> None:
 
     for i, metric in enumerate(METRICS):
         sub = df[df['measured_metric'] == metric]
-        val_scipy = sub[sub['implementation'] == 'scipy']['friedman_p'].values[0]
-        val_r = sub[sub['implementation'] == 'r']['friedman_p'].values[0]
-        val_ping = sub[sub['implementation'] == 'pinguoin']['friedman_p'].values[0]
-        
+        values = {impl: sub[sub['implementation'] == impl]['friedman_p'].values[0]
+                  for impl in IMPLEMENTATIONS}
+
         x_base = i
-        x_scipy = x_base - 0.12
-        x_r = x_base
-        x_ping = x_base + 0.12
-        
-        ax.plot([x_scipy, x_r], [val_scipy, val_r], color='gray', linewidth=1, alpha=0.5, zorder=1)
-        
-        center_sr = (x_scipy + x_r) / 2
-        fw_sr = 'bold' if val_scipy < SIG_THRESHOLD else 'normal'
-        ax.text(center_sr, val_scipy + 0.005, f'{val_scipy:.3f}', 
-                ha='center', va='bottom', fontsize=8, fontweight=fw_sr)
-        
-        fw_p = 'bold' if val_ping < SIG_THRESHOLD else 'normal'
-        ax.text(x_ping, val_ping + 0.004, f'{val_ping:.3f}', 
-                ha='center', va='bottom', fontsize=8, fontweight=fw_p)
+        x_positions = {
+            'scipy': x_base - 0.12,
+            'r': x_base,
+            'pinguoin': x_base + 0.12,
+        }
+
+        grouped = []
+        used = set()
+        for impl in IMPLEMENTATIONS:
+            if impl in used:
+                continue
+            group = [impl]
+            used.add(impl)
+            for other in IMPLEMENTATIONS:
+                if other not in used and np.isclose(values[impl], values[other], rtol=1e-9):
+                    group.append(other)
+                    used.add(other)
+            grouped.append(group)
+
+        for group in grouped:
+            val = values[group[0]]
+            x_coords = [x_positions[impl] for impl in group]
+
+            if len(group) > 1:
+                ax.plot([min(x_coords), max(x_coords)], [val, val],
+                        color='gray', linewidth=1, alpha=0.5, zorder=1)
+
+            center_x = np.mean(x_coords)
+            fw = 'bold' if val < SIG_THRESHOLD else 'normal'
+            ax.text(center_x, val + 0.005, f'{val:.3f}',
+                    ha='center', va='bottom', fontsize=8, fontweight=fw)
 
     ax.axhline(SIG_THRESHOLD, color=SIG_COLOR, linestyle='--', linewidth=1.5, label=f'Significance (p={SIG_THRESHOLD})')
     ax.axhspan(0, SIG_THRESHOLD, facecolor=SIG_COLOR, alpha=0.1, zorder=0)
